@@ -1,0 +1,3 @@
+﻿databaseChangeLog:
+  - includeAll:
+      path: /db/changelog/v*.yml

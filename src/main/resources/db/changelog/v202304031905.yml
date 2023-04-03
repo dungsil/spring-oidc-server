@@ -1,0 +1,17 @@
+﻿databaseChangeLog:
+  - changeSet:
+      id: v202304031905
+      author: "@dungsil"
+      comment: Init spring authorization server schema
+      changes:
+        - sqlFile:
+            path: "org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql"
+        - modifySql: # `blob` 미지원 데이터베이스 대응
+            dbms: postgresql
+            replace:
+              replace: blob
+              with: text
+        - sqlFile:
+            path: "org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql"
+        - sqlFile:
+            path: "org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql"

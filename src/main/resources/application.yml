@@ -3,13 +3,11 @@ spring:
     url: "jdbc:postgresql://${APP_DB_HOST}:${APP_DB_PORT}/${APP_DB_NAME}?currentSchema=${APP_DB_SCHEMA}"
     username: ${APP_DB_USER}
     password: ${APP_DB_PASSWORD}
-  sql:
-    init:
-      encoding: UTF-8
-      schema-locations:
-        - "classpath*:org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql"
-        - "classpath*:org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql"
-        - "classpath*:org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql"
+  liquibase:
+    drop-first: true
+    change-log: "classpath:/db/changelog/_main.yml"
+    database-change-log-table: db_changelog
+    database-change-log-lock-table: db_changelog_lock
 
 server:
   shutdown: graceful

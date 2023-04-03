@@ -41,6 +41,9 @@ dependencies {
   implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.0.1")
   testImplementation("org.springframework.security:spring-security-test")
 
+  // Liquibase
+  implementation("org.liquibase:liquibase-core")
+
   // JDBC Driver
   runtimeOnly("org.postgresql:postgresql")
 
