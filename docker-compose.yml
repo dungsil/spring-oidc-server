@@ -1,0 +1,15 @@
+﻿version: '3.8'
+volumes:
+  pg_data:
+    driver: local
+services:
+  postgres:
+    image: bitnami/postgresql
+    ports:
+      - "${APP_DB_PORT}:5432"
+    volumes:
+      - "pg_data:/bitnami/postgresql"
+    environment:
+      POSETGRESQL_USERNAME: ${APP_DB_USER}
+      POSTGRESQL_PASSWORD: ${APP_DB_PASSWORD}
+      POSTGRESQL_DATABASE: ${APP_DB_NAME}
