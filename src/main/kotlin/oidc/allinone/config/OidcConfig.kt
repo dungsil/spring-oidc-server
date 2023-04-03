@@ -5,20 +5,20 @@ import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
+import oidc.allinone.env.OAuth2Environment
 import oidc.allinone.utils.KeyGeneratorUtils
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered.HIGHEST_PRECEDENCE
 import org.springframework.core.annotation.Order
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.security.config.Customizer
+import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer
-import org.springframework.security.oauth2.core.AuthorizationGrantType
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod
-import org.springframework.security.oauth2.core.oidc.OidcScopes
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.oauth2.core.AuthorizationGrantType.*
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod.CLIENT_SECRET_POST
+import org.springframework.security.oauth2.core.oidc.OidcScopes.OPENID
+import org.springframework.security.oauth2.core.oidc.OidcScopes.PROFILE
 import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService
@@ -30,7 +30,6 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings
-import org.springframework.security.oauth2.server.authorization.settings.ClientSettings
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint
 import java.security.interfaces.RSAPrivateKey
@@ -44,44 +43,48 @@ import java.util.*
  * @since 2023.03.31
  */
 @Configuration
-class OidcConfig(@Value("\${APP_PUBLIC_URL}") private val appPublicUrl: String) {
+class OidcConfig {
 
   @Bean
   @Order(HIGHEST_PRECEDENCE)
   fun authorizationServerSecurityFilterChain(http: HttpSecurity): SecurityFilterChain? {
-    OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http)
-    http.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java)
-      .oidc(Customizer.withDefaults()) // Enable OpenID Connect 1.0
-
     // @formatter:off
-    http
-      .exceptionHandling{exceptions:ExceptionHandlingConfigurer<HttpSecurity?> -> exceptions.authenticationEntryPoint(LoginUrlAuthenticationEntryPoint("/login"))}
-      .oauth2ResourceServer{obj:OAuth2ResourceServerConfigurer<HttpSecurity?> -> obj.jwt()}
+    return http
+      .also { OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(it) }
+      .also { it.getConfigurer(OAuth2AuthorizationServerConfigurer::class.java).oidc(withDefaults()) }
+      .exceptionHandling{ it.authenticationEntryPoint(LoginUrlAuthenticationEntryPoint("/login")) }
+      .oauth2ResourceServer{ it.jwt() }
+      .build()
     // @formatter:on
-    return http.build()
   }
 
   // @formatter:off
-  @Bean fun registeredClientRepository(jdbcTemplate:JdbcTemplate): RegisteredClientRepository? {
-    val registeredClient: RegisteredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-      .clientId("messaging-client")
-      .clientSecret("{noop}secret")
-      .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-      .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-      .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-      .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-      .redirectUri("$appPublicUrl/login/oauth2/code/messaging-client-oidc")
-      .redirectUri("$appPublicUrl/authorized")
-      .scope(OidcScopes.OPENID)
-      .scope(OidcScopes.PROFILE)
-      .scope("message.read")
-      .scope("message.write")
-      .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
-      .build()
-
-    // Save registered client in db as if in-memory
+  @Bean
+  fun registeredClientRepository(
+    jdbcTemplate: JdbcTemplate,
+    passwordEncoder: PasswordEncoder,
+    env: OAuth2Environment
+  ): RegisteredClientRepository {
     val registeredClientRepository = JdbcRegisteredClientRepository(jdbcTemplate)
-    registeredClientRepository.save(registeredClient)
+
+    // Check an init client
+    if (registeredClientRepository.findByClientId(env.clientId) == null) {
+      registeredClientRepository.save(
+        RegisteredClient
+          .withId(UUID.randomUUID().toString()) // ID
+          .clientAuthenticationMethod(CLIENT_SECRET_POST) // 클라이언트 인증 방식
+          .clientId(env.clientId) // 클라이언트 ID
+          .clientSecret(passwordEncoder.encode(env.clientSecret)) // 클라이언트 비밀번호
+          .authorizationGrantType(REFRESH_TOKEN) // 리프레시 토큰
+          .authorizationGrantType(CLIENT_CREDENTIALS) // 클라이언트 내부사용
+          .redirectUris { it.addAll(env.redirectUris) }
+          .scope(OPENID)
+          .scope(PROFILE)
+          .clientSettings(env.settings)
+          .build()
+      )
+    }
+
     return registeredClientRepository
   }
   // @formatter:on

@@ -36,6 +36,7 @@ dependencies {
   implementation(springBootStarter("validation"))
   implementation(springBootStarter("actuator"))
   testImplementation(springBootStarter("test"))
+  testImplementation(springBootStarter("webflux"))
 
   // Spring security v6 & Spring security authorization server v1
   implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.0.1")
