@@ -107,7 +107,7 @@ class OidcConfig(@Value("\${APP_PUBLIC_URL}") private val appPublicUrl: String) 
   fun jwkSource(): JWKSource<SecurityContext?> {
     val rsaKey: RSAKey = generateRsa()
     val jwkSet = JWKSet(rsaKey)
-    return JWKSource<SecurityContext?> { jwkSelector: JWKSelector, securityContext: SecurityContext? ->
+    return JWKSource<SecurityContext?> { jwkSelector: JWKSelector, _: SecurityContext? ->
       jwkSelector.select(
         jwkSet
       )
