@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: v202304042203
+      comment: 사용자 정보 테이블 추가
+      author: "@dungsil"
+      changes:
+        - createSequence:
+            sequenceName: users__seq
+            minValue: 1
+            incrementBy: 1
+            startValue: 1001
+        - createTable:
+            tableName: users
+            remarks: "사용자 테이블"
+            columns:
+              - column:
+                  name: _id
+                  type: bigint
+                  defaultValueSequenceNext: users__seq
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: users__pk
+              - column:
+                  name: username
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: encrypted_password
+                  type: varchar
+                  constraints:
+                    nullable: false
