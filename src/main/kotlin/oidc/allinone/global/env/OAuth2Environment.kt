@@ -1,4 +1,4 @@
-package oidc.allinone.env
+package oidc.allinone.global.env
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings

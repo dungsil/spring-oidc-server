@@ -1,4 +1,4 @@
-package oidc.allinone.utils
+package oidc.allinone.global.utils
 
 import java.security.KeyPair
 import java.security.KeyPairGenerator
