@@ -28,7 +28,7 @@ class OAuth2EndpointTest {
   lateinit var om: ObjectMapper
 
   @Test
-  fun authorize() {
+  fun authorize__client_credentials() {
     // @formatter:off
     http.post().uri("/oauth2/token")
       .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -47,6 +47,16 @@ class OAuth2EndpointTest {
             assertEquals("Bearer", json["token_type"])
             assertEquals(299, json["expires_in"])
           }
+    // @formatter:on
+  }
+
+
+  @Test
+  fun authorize__refresh_token() {
+    // @formatter:off
+    http.post().uri("/oauth2/authorize?response_type=code&client_id=local")
+      .exchange()
+      .expectStatus().is3xxRedirection
     // @formatter:on
   }
 }

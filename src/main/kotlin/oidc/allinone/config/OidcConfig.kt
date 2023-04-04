@@ -75,6 +75,7 @@ class OidcConfig {
           .clientAuthenticationMethod(CLIENT_SECRET_POST) // 클라이언트 인증 방식
           .clientId(env.clientId) // 클라이언트 ID
           .clientSecret(passwordEncoder.encode(env.clientSecret)) // 클라이언트 비밀번호
+          .authorizationGrantType(AUTHORIZATION_CODE) // 인가 코드
           .authorizationGrantType(REFRESH_TOKEN) // 리프레시 토큰
           .authorizationGrantType(CLIENT_CREDENTIALS) // 클라이언트 내부사용
           .redirectUris { it.addAll(env.redirectUris) }
