@@ -1,9 +1,13 @@
 package oidc.allinone.global.utils
 
+import org.springframework.security.crypto.factory.PasswordEncoderFactories
+import org.springframework.security.crypto.factory.PasswordEncoderFactories.createDelegatingPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 import java.security.KeyPair
 import java.security.KeyPairGenerator
 
-internal object KeyGeneratorUtils {
+internal object CryptoUtils {
+  val passwordEncoder: PasswordEncoder = createDelegatingPasswordEncoder()
 
   fun generateRsaKey(): KeyPair {
     val keyPair: KeyPair = try {

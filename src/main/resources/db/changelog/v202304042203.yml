@@ -16,6 +16,7 @@ databaseChangeLog:
               - column:
                   name: _id
                   type: bigint
+                  remarks: 사용자 테이블 기본키
                   defaultValueSequenceNext: users__seq
                   constraints:
                     nullable: false
@@ -24,10 +25,12 @@ databaseChangeLog:
               - column:
                   name: username
                   type: varchar(20)
+                  remarks: 사용자 계정
                   constraints:
                     nullable: false
               - column:
                   name: encrypted_password
                   type: varchar
+                  remarks: 사용자 비밀번호 (암호화)
                   constraints:
                     nullable: false

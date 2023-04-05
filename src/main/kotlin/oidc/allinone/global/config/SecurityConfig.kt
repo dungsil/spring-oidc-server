@@ -1,5 +1,6 @@
 package oidc.allinone.global.config
 
+import oidc.allinone.global.utils.CryptoUtils
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.Customizer.withDefaults
@@ -24,7 +25,7 @@ import org.springframework.security.web.session.HttpSessionEventPublisher
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 class SecurityConfig {
   @Bean
-  fun passwordEncoder(): PasswordEncoder = createDelegatingPasswordEncoder()
+  fun passwordEncoder(): PasswordEncoder = CryptoUtils.passwordEncoder
 
   @Bean
   fun sessionRegistry(): SessionRegistry = SessionRegistryImpl()

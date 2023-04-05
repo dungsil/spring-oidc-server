@@ -54,7 +54,8 @@ class OAuth2EndpointTest {
   @Test
   fun authorize__refresh_token() {
     // @formatter:off
-    http.post().uri("/oauth2/authorize?response_type=code&client_id=local")
+    http.post().uri("/login")
+
       .exchange()
       .expectStatus().is3xxRedirection
     // @formatter:on

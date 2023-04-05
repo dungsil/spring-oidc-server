@@ -5,8 +5,8 @@ import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.JWKSource
 import com.nimbusds.jose.proc.SecurityContext
-import oidc.allinone.global.env.OAuth2Environment
-import oidc.allinone.global.utils.KeyGeneratorUtils
+import oidc.allinone.global.AppEnvironment
+import oidc.allinone.global.utils.CryptoUtils
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered.HIGHEST_PRECEDENCE
@@ -63,25 +63,27 @@ class OidcConfig {
   fun registeredClientRepository(
     jdbcTemplate: JdbcTemplate,
     passwordEncoder: PasswordEncoder,
-    env: OAuth2Environment
+    env: AppEnvironment
   ): RegisteredClientRepository {
     val registeredClientRepository = JdbcRegisteredClientRepository(jdbcTemplate)
 
     // Check an init client
-    if (registeredClientRepository.findByClientId(env.clientId) == null) {
+    if (registeredClientRepository.findByClientId(env.oauth2ClientId) == null) {
       registeredClientRepository.save(
         RegisteredClient
           .withId(UUID.randomUUID().toString()) // ID
           .clientAuthenticationMethod(CLIENT_SECRET_POST) // 클라이언트 인증 방식
-          .clientId(env.clientId) // 클라이언트 ID
-          .clientSecret(passwordEncoder.encode(env.clientSecret)) // 클라이언트 비밀번호
+          .clientId(env.oauth2ClientId) // 클라이언트 ID
+          .clientSecret(passwordEncoder.encode(env.oauth2ClientSecret)) // 클라이언트 비밀번호
           .authorizationGrantType(AUTHORIZATION_CODE) // 인가 코드
           .authorizationGrantType(REFRESH_TOKEN) // 리프레시 토큰
           .authorizationGrantType(CLIENT_CREDENTIALS) // 클라이언트 내부사용
-          .redirectUris { it.addAll(env.redirectUris) }
+          .redirectUri(env.publicUrl) // 메인 경로는 기본으로 설정
+          .redirectUri(env.publicUrl + "/authorized") // 인증 후 토큰을 발급 받는 경로는 기본적으로 설정
+          .redirectUris { it.addAll(env.oauth2RedirectUris) }
           .scope(OPENID)
           .scope(PROFILE)
-          .clientSettings(env.settings)
+          .clientSettings(env.oauth2Settings)
           .build()
       )
     }
@@ -130,7 +132,7 @@ class OidcConfig {
 
 
   private fun generateRsa(): RSAKey {
-    val keyPair = KeyGeneratorUtils.generateRsaKey()
+    val keyPair = CryptoUtils.generateRsaKey()
     val publicKey = keyPair.public as RSAPublicKey
     val privateKey = keyPair.private as RSAPrivateKey
 

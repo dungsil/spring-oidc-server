@@ -1,4 +1,4 @@
-package oidc.allinone.user
+package oidc.allinone.domain.user
 
 import jakarta.persistence.*
 
